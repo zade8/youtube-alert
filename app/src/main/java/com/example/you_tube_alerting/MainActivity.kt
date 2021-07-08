@@ -1,6 +1,5 @@
 package com.example.you_tube_alerting
 
-import android.accounts.Account
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -10,15 +9,35 @@ import com.android.volley.Request.Method.GET
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
-import com.google.api.client.util.ExponentialBackOff
 import com.google.api.services.youtube.YouTubeScopes.YOUTUBE_READONLY
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.net.URL
 
+//AIzaSyClBPKCe-0wlCEYB8J5giIB7FlNfLwIWII
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+//        val r = applicationContext
+//            .resources
+//            .assets
+//            .open("my_secret.json")
+//            .bufferedReader()
+//            .use { it.readText() }
+        runBlocking {
+            launch {
+                val t = YouTubeApi(applicationContext)
+                val cred = t.getSubs()
+                val r =""
+            }
+        }
+        getPreferences()
+//        val t = YouTubeApi(applicationContext)
+//        val cred = t.authorize()
+//        val r =""
 
         Toast.makeText(applicationContext, "view is created", Toast.LENGTH_SHORT).show();
         getNumberOfSubs()
@@ -62,7 +81,6 @@ class MainActivity : AppCompatActivity() {
             listOf(YOUTUBE_READONLY),
         )
 
-        val e = forChannelId()
 
         val zadeUrl = "https://www.youtube.com/channel/UC4bAHicwNwBKFwyZju8cPug"
         val rowContent = URL(zadeUrl).readText()
