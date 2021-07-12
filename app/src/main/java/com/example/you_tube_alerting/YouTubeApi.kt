@@ -1,109 +1,94 @@
 package com.example.you_tube_alerting
 
+import android.app.Activity
 import android.content.Context
-import android.content.SharedPreferences
+import android.content.Intent
+import android.net.Uri
+import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl
 import com.google.api.client.auth.oauth2.Credential
-import com.google.api.client.extensions.android.http.AndroidHttp
-import com.google.api.client.extensions.android.json.AndroidJsonFactory
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
+import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets
+import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.youtube.YouTube
-import com.google.api.services.youtube.YouTubeScopes
 import com.google.api.services.youtube.YouTubeScopes.YOUTUBE_READONLY
-import com.google.api.services.youtube.model.Subscription
+import com.google.api.services.youtubeAnalytics.YouTubeAnalytics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.io.InputStreamReader
 
 
 class YouTubeApi(
     private val context: Context,
-    privite val preferences: SharedPreferences,
-) {
-    private val secretLocation = "secrets/my_secret.json"
+    private val activity: Activity,
+
+    ) {
+    private val secretLocation = "secrets/client_secret.json"
     private val youtubeCred = context.resources.assets.open(secretLocation)
-    private val key = "AIzaSyDFTv7j6h2U5Xns53dFek8vSLaeGzUJz3Y"
 
-    var youTubeDataAPIEndpoint = YouTube
-        .Builder(AndroidHttp.newCompatibleTransport(), AndroidJsonFactory(), null)
-        .build()
 
-    suspend fun getSubs() = withContext(Dispatchers.IO) { getSubsBlocking() }
-
-    fun getSubsBlocking(): List<Subscription> = youTubeDataAPIEndpoint
-        .subscriptions()
-        .list("snippet")
-        .setForChannelId("UC4bAHicwNwBKFwyZju8cPug")
-        .setMyRecentSubscribers(true)
-        .setKey(key)
-        .execute()
-        .items
 
     suspend fun authorize() = withContext(Dispatchers.IO) { authorizeInGoogle() }
 
     private fun authorizeInGoogle(): Credential {
-        val credential =
-            GoogleAccountCredential.usingOAuth2(context, listOf(YOUTUBE_READONLY))
-        //val settings: SharedPreferences = getPreferences(Context.MODE_PRIVATE)
-        credential.setSelectedAccountName(preferences.getString(PREF_ACCOUNT_NAME, null))
-// YouTube client `
-// YouTube client
-        service = YouTube.Builder(transport, jsonFactory, credential)
-            .setApplicationName("Google-YouTubeAndroidSample/1.0").build()
+        val clientSecrets =
+            GoogleClientSecrets.load(
+                JacksonFactory.getDefaultInstance(),
+                InputStreamReader(youtubeCred)
+            )
 
+        val flow = GoogleAuthorizationCodeFlow.Builder(
+            NetHttpTransport(),
+            JacksonFactory.getDefaultInstance(),
+            clientSecrets,
+            listOf(YOUTUBE_READONLY, "https://www.googleapis.com/auth/yt-analytics.readonly"),
+        )
+            .setAccessType("offline")
+            .setApprovalPrompt("force")
+            .build()
 
-//        val clientSecrets =
-//            GoogleClientSecrets.load(
-//                JacksonFactory.getDefaultInstance(),
-//                InputStreamReader(youtubeCred)
-//            )
-//
-//        val flow = GoogleAuthorizationCodeFlow.Builder(
-//            NetHttpTransport(),
-//            JacksonFactory.getDefaultInstance(),
-//            clientSecrets,
-//            listOf(YOUTUBE_READONLY),
-//        )
-//            .setAccessType("offline")
-//            .setApprovalPrompt("force")
-//            .build()
-//
-//
-//        val ab: AuthorizationCodeInstalledApp =
-//            object : AuthorizationCodeInstalledApp(flow, LocalServerReceiver()) {
-//                @Throws(IOException::class)
-//                override fun onAuthorization(authorizationUrl: AuthorizationCodeRequestUrl) {
-//                    val url = authorizationUrl.build()
-//                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-//                    browserIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//                    context.startActivity(browserIntent)
-//                }
-//            }
-//        val r = Credential.Builder(BearerToken.formEncodedBodyAccessMethod()).setClientAuthentication()
+        val ab: AuthorizationCodeInstalledApp =
+            object : AuthorizationCodeInstalledApp(flow, LocalServerReceiver()) {
+                @Throws(IOException::class)
+                override fun onAuthorization(authorizationUrl: AuthorizationCodeRequestUrl) {
+                    val url = authorizationUrl.build()
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    browserIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    activity.startActivity(browserIntent)
+                }
+            }
 
-//        val e = ab.authorize("user").setAccessToken("user")
-//
-//        return e
-
-
-//        val e =""
-//        return AuthorizationCodeInstalledApp(flow, LocalServerReceiver.Builder()
-//            .setPort(8080)
-//            .build())
-//            .authorize("user")
-
-
-//        val scopes: MutableCollection<String> = ArrayList()
-//        scopes.add(Scopes.PROFILE)
-//        val credential = GoogleAccountCredential.usingOAuth2(context, scopes)
-//
-//        credential.setSelectedAccountName(mFirebaseAuth.getCurrentUser().getEmail())
-//
-//        val userProfile = null
-//
-//        val service: PeopleService = Builder(http_transport, JSON_FACTORY, credential)
-//            .setApplicationName(mainActivity.getResources().getString(R.string.app_name)).build()
-//        val userProfile: Person = service.people().get("people/100889827937171513174")
-//            .setRequestMaskIncludeField("person.biographies,person.birthdays,person.genders,person.phone_numbers")
-//            .execute()
-//
+        return ab.authorize("user").setAccessToken("user")
     }
+
+    suspend fun dooo() = withContext(Dispatchers.IO) { doo() }
+
+    fun doo() {
+        val httpTransport = NetHttpTransport()
+        val credential = authorizeInGoogle()
+        val youtubeService = YouTube.Builder(httpTransport, JacksonFactory.getDefaultInstance(), credential)
+            .setApplicationName(context.appName)
+            .build()
+
+        val request = youtubeService.subscriptions()
+            .list("snippet")
+        val response = request.setMyRecentSubscribers(true).execute()//.items[0].snippet.channelId
+        println(response)
+
+        val analytics = YouTubeAnalytics.Builder(httpTransport, JacksonFactory.getDefaultInstance(), credential)
+            .setApplicationName(context.appName)
+            .build()
+
+        val e = analytics.reports().query()
+
+    }
+
+//    fun authorizeWithin(activity: Activity) =
 }
+
+val Context.appName
+    get() = applicationInfo.loadLabel(packageManager).toString()
+

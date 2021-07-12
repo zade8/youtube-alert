@@ -1,5 +1,6 @@
 package com.example.you_tube_alerting
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.net.URL
 
+
 //AIzaSyClBPKCe-0wlCEYB8J5giIB7FlNfLwIWII
 
 class MainActivity : AppCompatActivity() {
@@ -27,21 +29,32 @@ class MainActivity : AppCompatActivity() {
 //            .open("my_secret.json")
 //            .bufferedReader()
 //            .use { it.readText() }
-        runBlocking {
-            launch {
-                val t = YouTubeApi(applicationContext)
-                val cred = t.getSubs()
-                val r =""
-            }
-        }
-        getPreferences()
+//        val t = YouTubeApi(applicationContext)
+//        val cred = t.authorizeInGoogle()
+
+        startActivity(Intent(this, AuthorizationActivity::class.java))
+
+//        runBlocking {
+//            launch {
+//                val t = YouTubeApi(applicationContext)
+//                val cred = t.authorize()
+//                val r = ""
+//            }
+//        }
+//        getPreferences()
 //        val t = YouTubeApi(applicationContext)
 //        val cred = t.authorize()
 //        val r =""
 
-        Toast.makeText(applicationContext, "view is created", Toast.LENGTH_SHORT).show();
-        getNumberOfSubs()
+//        Toast.makeText(applicationContext, "view is created", Toast.LENGTH_SHORT).show();
+//        getNumberOfSubs()
 
+//        val returnBtn = Intent(
+//            applicationContext,
+//            MainActivity::class.java
+//        )
+//
+//        startActivity(returnBtn)
         val startButton = findViewById<Button>(R.id.start)
         startButton.setOnClickListener {
             Toast.makeText(applicationContext, "start is clicked", Toast.LENGTH_SHORT).show();
